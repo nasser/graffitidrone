@@ -25,8 +25,8 @@ deltas = gml.xpath("//stroke").map do |stroke|
   end
 end
 
-TAG_SCALE = 2
-DRONE_SPEED = 0.5
+TAG_SCALE = 1
+DRONE_SPEED = 0.25
 
 $timeline = 0
 def push_event t, &evt
@@ -65,7 +65,7 @@ end
 def pen_down
   puts "pen down"
   push_event(0.1) { drone.forward(DRONE_SPEED) }
-  push_event(0.1) { drone.hover }
+  push_event(0.2) { drone.hover }
 end
 
 def pen_up
@@ -77,6 +77,9 @@ end
 work do
   drone.start
   drone.take_off
+  # push_event (5) { drone.hover }
+  # push_event (2) { drone.up(0.1) }
+  # push_event (1) { drone.hover }
 
   deltas.each do |stroke|
     fly stroke.shift
