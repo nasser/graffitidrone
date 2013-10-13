@@ -29,6 +29,7 @@ DRONE_SPEED = 0.2
 
 def fly delta
   puts "fly to #{delta}"
+  # trig math to determine constant horizontal and vertical movement
 end
 
 def pen_down
