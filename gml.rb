@@ -1,8 +1,8 @@
 require 'nokogiri'
-# require 'artoo'
+require 'artoo'
 
-# connection :ardrone, :adaptor => :ardrone, :port => '192.168.1.1:5556'
-# device :drone, :driver => :ardrone, :connection => :ardrone
+connection :ardrone, :adaptor => :ardrone
+device :drone, :driver => :ardrone
 
 Point = Struct.new(:x, :y)
 
@@ -44,18 +44,18 @@ def pen_up
   after(0.1.seconds) { drone.hover }
 end
 
-# work do
-#   drone.start
-#   drone.take_off
-# 
-#   deltas.each do |stroke|
-#     fly stroke.shift
-#     pen_down
-#     stroke.each do |point|
-#       fly point
-#     end
-#     pen_up
-#   end
-# 
-#   after(1.seconds) { drone.stop }
-# end
+work do
+  drone.start
+  drone.take_off
+
+  deltas.each do |stroke|
+    fly stroke.shift
+    pen_down
+    stroke.each do |point|
+      fly point
+    end
+    pen_up
+  end
+
+  after(1.seconds) { drone.stop }
+end
