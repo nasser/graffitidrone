@@ -1,8 +1,8 @@
 require 'nokogiri'
-# require 'artoo'
+require 'artoo'
 
-# connection :ardrone, :adaptor => :ardrone, :port => '192.168.1.1:5556'
-# device :drone, :driver => :ardrone, :connection => :ardrone
+connection :ardrone, :adaptor => :ardrone, :port => '192.168.1.1:5556'
+device :drone, :driver => :ardrone, :connection => :ardrone
 
 Point = Struct.new(:x, :y)
 
@@ -25,37 +25,67 @@ deltas = gml.xpath("//stroke").map do |stroke|
   end
 end
 
-DRONE_SPEED = 0.2
+TAG_SCALE = 5
+DRONE_SPEED = 0.5
+
+$timeline = 0
+def push_event t, &evt
+  $timeline += t
+  after($timeline, &evt)
+end
 
 def fly delta
-  puts "fly to #{delta}"
-  # trig math to determine constant horizontal and vertical movement
+  puts "fly #{delta}"
+
+  magnitude = Math.sqrt(delta.x**2 + delta.y**2)
+
+  puts "-- magnitude = #{magnitude}"
+
+  push_event(0.1.seconds) do
+    if delta.x >= 0
+      drone.right (delta.x * DRONE_SPEED)
+      puts "-- drone.right (#{delta.x * DRONE_SPEED})"
+    else
+      drone.left (delta.x.abs * DRONE_SPEED)
+      puts "-- drone.left (#{delta.x.abs * DRONE_SPEED})"
+    end
+
+    if delta.y >= 0
+      drone.up (delta.y * DRONE_SPEED)
+      puts "-- drone.up (#{delta.y * DRONE_SPEED})"
+    else
+      drone.down (delta.y.abs * DRONE_SPEED)
+      puts "-- drone.down (#{delta.y.abs * DRONE_SPEED})"
+    end
+  end
+
+  push_event(magnitude * TAG_SCALE) { drone.hover }
 end
 
 def pen_down
   puts "pen down"
-  after(0.1.seconds) { drone.forward(DRONE_SPEED) }
-  after(0.1.seconds) { drone.hover }
+  push_event(0.1.seconds) { drone.forward(DRONE_SPEED) }
+  push_event(0.1.seconds) { drone.hover }
 end
 
 def pen_up
   puts "pen up"
-  after(0.1.seconds) { drone.backward(DRONE_SPEED) }
-  after(0.1.seconds) { drone.hover }
+  push_event(0.1.seconds) { drone.backward(DRONE_SPEED) }
+  push_event(0.1.seconds) { drone.hover }
 end
 
-# work do
-#   drone.start
-#   drone.take_off
-# 
-#   deltas.each do |stroke|
-#     fly stroke.shift
-#     pen_down
-#     stroke.each do |point|
-#       fly point
-#     end
-#     pen_up
-#   end
-# 
-#   after(1.seconds) { drone.stop }
-# end
+work do
+  drone.start
+  drone.take_off
+
+  deltas.each do |stroke|
+    fly stroke.shift
+    pen_down
+    stroke.each do |point|
+      fly point
+    end
+    pen_up
+  end
+
+  push_event(1.seconds) { drone.stop }
+end
